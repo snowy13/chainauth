@@ -5,14 +5,14 @@
 contract DevicePool {
     address owner;
     // Device representation struct.
-    struct device_t {
-        name,
-        reg_date,
-        wireless_if,
-        resources
+    struct Device {
+        byte32 name,
+        uint32 reg_ts,
+        byte32[] wireless_if,
+        byte32[] resources
     };
     // Stored devices 
-    mapping<address, device_t> devices;
+    mapping (address => Device) devices;
 
     //---------------------------- Constructor ---------------------------------
     function DevicePool() {
@@ -32,8 +32,8 @@ contract DevicePool {
         if (devices[msg.sender] != 0x0) {
             return false;
         }
-        reg_date = current_date;
-        device = new device_t(name, reg_date, wireless_if, resources);
+        reg_ts = 100000; //current_ts;
+        device = new Device(name, reg_ts, wireless_if, resources);
         
         devices[msg.sender] = device;
 
@@ -43,8 +43,12 @@ contract DevicePool {
     //--------------------------------------------------------------------------
     // Unregister a device
     //--------------------------------------------------------------------------
-    function unregister(byte32 name) {
+    function unregister() returns (bool res) {
+        if (devices[msg.sender] == 0x0) {
+            return false;
+        }
         devices[msg.sender] = 0x0;
+        return true;
     }
     
     //--------------------------------------------------------------------------

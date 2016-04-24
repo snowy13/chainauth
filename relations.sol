@@ -4,7 +4,7 @@
 contract RelationPool {
     address owner;
     // Map device addr to its related devices address list.
-    mapping<address, address[]> relations;
+    mapping (address => address[]) relations;
 
     //------------------------------ Constructor -------------------------------
     function RelationPool() {
