@@ -1,0 +1,13 @@
+jobs:
+
+- name: deployDeviceK 
+  job:
+    deploy: 
+      contract: devices.sol
+      wait: true
+
+- name: deployRelationK
+  job:
+    deploy:
+      contract: relations.sol
+      wait: true

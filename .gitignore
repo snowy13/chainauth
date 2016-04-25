@@ -1,1 +1,4 @@
 *.swp
+/accounts.json
+/node_modules
+abi

@@ -14,26 +14,36 @@ contract RelationPool {
     //--------------------------------------------------------------------------
     // Add a related device
     //--------------------------------------------------------------------------
-    function add(address addr, address related) returns (bool res) {
+    function addRelation(address addr, address related) returns (bool res) {
         if (msg.sender != addr) return false;
 
-        if (relations[addr] != 0x0) {
-            relations[addr].add(related);
-        } else {
-            relations[addr] = [related];
+        address[] relates = relations[addr];
+        // Check if it's already in the list. CAUTION: This can be time consuming 
+        // if the relates array is large.
+        for (uint i=0; i < relates.length; i++) {
+            if (relates[i] == related) return false;
         }
+        relates.push(related);
         return true;
+    }
+    
+    //--------------------------------------------------------------------------
+    // Get all related devices of specified device.
+    //--------------------------------------------------------------------------
+    function getRelates(address addr) returns (address[] addrs) {
+        if (msg.sender != addr) throw;
+        return relations[addr];
     }
 
     //--------------------------------------------------------------------------
     // Delete a related device.
     //--------------------------------------------------------------------------
-    function del(address addr, address toremove) return (bool res) {
-        if (msg.sender != addr || relations[addr] == 0x0) return false;
+    //function delelte(address addr, address toremove) return (bool res) {
+        //if (msg.sender != addr || relations[addr] == 0x0) return false;
 
-        relations[addr].remove(toremvoe);
-        return true;
-    }
+        //relations[addr].remove(toremvoe);
+        //return true;
+    //}
 
     //--------------------------------------------------------------------------
     // Remove the contruct
