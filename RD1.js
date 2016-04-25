@@ -2,9 +2,10 @@
 ********************************************************************************
 * Related device node 1
 * AS in the use case is the Wemo Link.
-* Workflow for this node is: 
+* Workflow for this node is:
 *   1. Register itself.
 *   2. Confirm authentication (Next phase).
+* Contracts used: devices.sol
 ********************************************************************************
 */
 
@@ -25,16 +26,22 @@ var relsAbi = JSON.parse(fs.readFileSync("./contracts/abi/" + relsContractAddres
 // properly instantiate the contract objects manager using the erisdb URL
 // and the account data (which is a temporary hack)
 var accountData = require('./accounts.json');
-// TODO: Change account to RD1 later.
-var contractsManager = erisC.newContractManagerDev(erisdbURL, accountData.authiot_authexecutor_AE);
+var addrRD1 = accountData.authiot_authparticipant_RD1.address;
+var contractsManager = erisC.newContractManagerDev(erisdbURL,
+                                        accountData.authiot_authparticipant_RD1);
 
 // properly instantiate the contract objects using the abi and address
-var devsContract = contractsManager.newContractFactory(devsAbi).at(devsContractAddress);
-var relsContract = contractsManager.newContractFactory(relsAbi).at(relsContractAddress);
+var devsContract = contractsManager.newContractFactory(devsAbi).
+                                                        at(devsContractAddress);
+var relsContract = contractsManager.newContractFactory(relsAbi).
+                                                        at(relsContractAddress);
 
-// Initialize 
+// Initialize
 registerMe(function() {});
 
+//------------------------------------------------------------------------------
+// Register the node itself.
+//------------------------------------------------------------------------------
 function registerMe(callback) {
   register("RD1-Wemo Link", "Wifi, bluetooth", "light, microphone", callback);
 }
@@ -43,26 +50,27 @@ function registerMe(callback) {
 // Register a device
 //------------------------------------------------------------------------------
 function register(name, wireless_if, resources, callback) {
-    devsContract.register(name, wireless_if, resources, function(error, result) {
-        if (error) { throw error }
-        if (result) {
-            // Retrieve and print device info.
-            devsContract.getDevInfo(accountData.authiot_authexecutor_AE.address, 
-                function(error, result) {
-                    if (error) { throw error }
-                    console.log("Device name: " + result[0]);
-                    console.log("Device address: " + result[1]);
-                    console.log("Wireless I/F: " + result[2]);
-                    console.log("Resources: " + result[3]);
+    devsContract.register(name, wireless_if, resources,
+        function(error, result) {
+                if (error) { throw error }
+                if (result) {
+                    // Retrieve and print device info.
+                    devsContract.getDevInfo(addrRD1, function(error, result) {
+                            if (error) { throw error }
+                            console.log("Device name: " + result[0]);
+                            console.log("Device address: " + result[1]);
+                            console.log("Wireless I/F: " + result[2]);
+                            console.log("Resources: " + result[3]);
+                        }
+                    );
+                    callback();
+                } else {
+                    // Unregister existing device. Then register.
+                    unregister();
+                    registerMe(callback);
                 }
-            );
-            callback();
-        } else {
-            // Unregister existing device. Then register.
-            unregister();
-            registerMe(callback);
         }
-    });
+    );
 }
 
 //------------------------------------------------------------------------------
@@ -72,9 +80,9 @@ function unregister() {
     devsContract.unregister( function (error, result) {
         if (error) { throw error }
         if (result) {
-            console.log("Unregistered " + accountData.authiot_authexecutor_AE.address)
+            console.log("Unregistered " + addrRD1);
         } else {
-            console.log("Unregistration failed!")
+            console.log("Unregistration failed!");
         }
     });
 }

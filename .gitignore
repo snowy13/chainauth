@@ -1,4 +1,9 @@
+# Intermediate/temparary files
 *.swp
+# Accounts credentials
 /accounts.json
+# Nodejs packages
 /node_modules
+# Contract data
 abi
+contracts/epm.json

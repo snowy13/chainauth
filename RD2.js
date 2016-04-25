@@ -2,9 +2,10 @@
 ********************************************************************************
 * Related device node 2
 * AS in the use case is the Wemo switch.
-* Workflow for this node is: 
+* Workflow for this node is:
 *   1. Register itself.
 *   2. Confirm authentication (Next phase).
+* Contracts used: devices.sol
 ********************************************************************************
 */
 
@@ -25,18 +26,24 @@ var relsAbi = JSON.parse(fs.readFileSync("./contracts/abi/" + relsContractAddres
 // properly instantiate the contract objects manager using the erisdb URL
 // and the account data (which is a temporary hack)
 var accountData = require('./accounts.json');
-// TODO: Change account to RD1 later.
-var contractsManager = erisC.newContractManagerDev(erisdbURL, accountData.authiot_authexecutor_AE);
+var addrRD2 = accountData.authiot_authparticipant_RD2.address
+var contractsManager = erisC.newContractManagerDev(erisdbURL,
+                                        accountData.authiot_authparticipant_RD2);
 
 // properly instantiate the contract objects using the abi and address
-var devsContract = contractsManager.newContractFactory(devsAbi).at(devsContractAddress);
-var relsContract = contractsManager.newContractFactory(relsAbi).at(relsContractAddress);
+var devsContract = contractsManager.newContractFactory(devsAbi).
+                                                        at(devsContractAddress);
+var relsContract = contractsManager.newContractFactory(relsAbi).
+                                                        at(relsContractAddress);
 
-// Initialize 
+// Initialize
 registerMe(function() {});
 
+//------------------------------------------------------------------------------
+// Register the node itself.
+//------------------------------------------------------------------------------
 function registerMe(callback) {
-  register("RD1-Wemo Switch", "Wifi, bluetooth", "light, microphone", callback);
+    register("RD2-Wemo Switch", "Wifi, bluetooth", "light, microphone", callback);
 }
 
 //------------------------------------------------------------------------------
@@ -47,8 +54,7 @@ function register(name, wireless_if, resources, callback) {
         if (error) { throw error }
         if (result) {
             // Retrieve and print device info.
-            devsContract.getDevInfo(accountData.authiot_authexecutor_AE.address, 
-                function(error, result) {
+            devsContract.getDevInfo(addrRD2, function(error, result) {
                     if (error) { throw error }
                     console.log("Device name: " + result[0]);
                     console.log("Device address: " + result[1]);
@@ -72,9 +78,10 @@ function unregister() {
     devsContract.unregister( function (error, result) {
         if (error) { throw error }
         if (result) {
-            console.log("Unregistered " + accountData.authiot_authexecutor_AE.address)
+            console.log("Unregistered " + addrRD2);
         } else {
-            console.log("Unregistration failed!")
+            console.log("Unregistration failed!");
         }
     });
 }
+

@@ -2,11 +2,13 @@
 ********************************************************************************
 * Authencication Subject Node
 * AS in the use case is the philips hue bridge.
-* Workflow for this node is: 
+* Workflow for this node is:
 *   1. Register itself.
 *   2. Add related devices.
+* Contracts used: devices.sol, relations.sol
 ********************************************************************************
 */
+
 // requires
 var fs = require('fs')
 var erisC = require('eris-contracts');
@@ -24,24 +26,38 @@ var relsAbi = JSON.parse(fs.readFileSync("./contracts/abi/" + relsContractAddres
 // properly instantiate the contract objects manager using the erisdb URL
 // and the account data (which is a temporary hack)
 var accountData = require('./accounts.json');
-// TODO: Change account to AS later.
-var contractsManager = erisC.newContractManagerDev(erisdbURL, accountData.authiot_authexecutor_AE);
+var addrAS = accountData.authiot_authparticipant_AS.address;
+var addrRD1 = accountData.authiot_authparticipant_RD1.address;
+var addrRD2 = accountData.authiot_authparticipant_RD2.address;
+
+// AS contract manager
+var contractsManager = erisC.newContractManagerDev(erisdbURL,
+                                        accountData.authiot_authparticipant_AS);
 
 // properly instantiate the contract objects using the abi and address
-var devsContract = contractsManager.newContractFactory(devsAbi).at(devsContractAddress);
-var relsContract = contractsManager.newContractFactory(relsAbi).at(relsContractAddress);
+var devsContract = contractsManager.newContractFactory(devsAbi).
+                                                at(devsContractAddress);
+var relsContract = contractsManager.newContractFactory(relsAbi).
+                                                at(relsContractAddress);
 
-// Initialize 
+// Initialize
 registerMe(addRelations);
 
+//------------------------------------------------------------------------------
+// Register the node itself.
+//------------------------------------------------------------------------------
 function registerMe(callback) {
   register("AS-Hue Bridge", "Wifi, bluetooth", "light, speaker", callback);
 }
 
+//------------------------------------------------------------------------------
+// Add relations to AS.
+// Used as callback after registering itself.
+//------------------------------------------------------------------------------
 function addRelations() {
-  // Add related device authiot_authparticipant_AS
-  addRelation(accountData.authiot_authexecutor_AE.address,
-              accountData.authiot_authparticipant_AS.address);
+  // Add related device RD1 and RD2
+  addRelation(addrAS, addrRD1);
+  addRelation(addrAS, addrRD2);
 }
 
 //------------------------------------------------------------------------------
@@ -52,8 +68,7 @@ function register(name, wireless_if, resources, callback) {
         if (error) { throw error }
         if (result) {
             // Retrieve and print device info.
-            devsContract.getDevInfo(accountData.authiot_authexecutor_AE.address, 
-                function(error, result) {
+            devsContract.getDevInfo(addrAS, function(error, result) {
                     if (error) { throw error }
                     console.log("Device name: " + result[0]);
                     console.log("Device address: " + result[1]);
@@ -77,17 +92,16 @@ function addRelation(addr, related) {
     relsContract.addRelation(addr, related, function (error, result) {
         if (error) { throw error }
         if (result) {
-            console.log("Added new related device: " + 
-                accountData.authiot_authparticipant_AS.address);
+            console.log("Added new related device: " + related);
         }
         // Retrieve related devices.
-        relsContract.getRelates(accountData.authiot_authexecutor_AE.address,
-            function(error, result) {
-                if (error) { throw error}
-                for (var i=0; i < result.length; i++)
-                    console.log("Related devices " + "(" + (i+1) + "): " + result[i]);
-            }
-        );
+        //relsContract.getRelates(addr,
+         //   function(error, result) {
+        //        if (error) { throw error}
+         //       for (var i=0; i < result.length; i++)
+          //          console.log("Related devices " + "(" + (i+1) + "): " + result[i]);
+           // }
+        //);
     });
 }
 
@@ -104,3 +118,4 @@ function unregister() {
         }
     });
 }
+

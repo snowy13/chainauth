@@ -31,7 +31,7 @@ contract RelationPool {
     // Get all related devices of specified device.
     //--------------------------------------------------------------------------
     function getRelates(address addr) returns (address[] addrs) {
-        if (msg.sender != addr) throw;
+        if (relations[addr].length == 0) return;
         return relations[addr];
     }
 
